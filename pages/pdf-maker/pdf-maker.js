@@ -3,9 +3,6 @@ const jsPDF = require('../../utils/my_jspdf.js');
 Page({
   data: {
     images: [],
-    isGenerating: false,
-    itemWidth: 220,
-    itemHeight: 220,
     draggingIndex: -1,
     draggingTarget: -1,
     pageStyleGlobal: {},
@@ -18,7 +15,6 @@ Page({
     this.loadPageLayoutInfo();
   },
   loadPageLayoutInfo() {
-    const rect = wx.getMenuButtonBoundingClientRect()
     const windowInfo = wx.getWindowInfo();
     const pageStyleGlobal = `--status-bar-height: ${windowInfo.statusBarHeight}px;`
     this.setData({ pageStyleGlobal })
@@ -222,7 +218,6 @@ Page({
       return;
     }
 
-    this.setData({ isGenerating: true });
     wx.showLoading({
       title: '正在生成PDF...',
     });
@@ -230,7 +225,6 @@ Page({
     try {
       // 创建PDF文档
       const doc = new jsPDF();
-      let currentPage = 1;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = this.data.margin;
@@ -265,7 +259,6 @@ Page({
         // 如果图片需要旋转，交换宽高
         if (rotation === 90 || rotation === 270) {
           [width, height] = [height, width];
-          // [maxContentWidth, maxContentHeight] = [maxContentHeight, maxContentWidth];
         }
 
         const scale = Math.min(
@@ -281,14 +274,12 @@ Page({
         if (!this.data.combineImages) {
           if (i > 0) {
             doc.addPage();
-            currentPage++;
           }
           currentY = margin;
         } else {
           // 如果合并图片且当前页面放不下，添加新页面
           if (currentY + scaledHeight > maxContentHeight + 1) {
             doc.addPage();
-            currentPage++;
             currentY = margin;
           }
         }
@@ -409,8 +400,6 @@ Page({
         title: '生成PDF失败，可能是历史文件太多了！',
         icon: 'none'
       });
-    } finally {
-      this.setData({ isGenerating: false });
     }
   }
 }); 

@@ -321,35 +321,6 @@ function parseMarkdown(markdown) {
   return blocks;
 }
 
-function markdownToHtml(markdown) {
-  const blocks = parseMarkdown(markdown);
-  if (!blocks.length) {
-    return '';
-  }
-
-  return blocks.map((block) => {
-    switch (block.type) {
-      case 'heading':
-        return `<h${block.level}>${applyInlineMarkdown(block.text)}</h${block.level}>`;
-      case 'paragraph':
-        return `<p>${block.html}</p>`;
-      case 'code':
-        return `<pre><code>${escapeHtml(block.content)}</code></pre>`;
-      case 'blockquote':
-        return `<blockquote>${block.html}</blockquote>`;
-      case 'list':
-        return block.ordered
-          ? `<ol>${block.items.map((item) => `<li>${item.html || item}</li>`).join('')}</ol>`
-          : `<ul>${block.items.map((item) => `<li>${item.html || item}</li>`).join('')}</ul>`;
-      case 'hr':
-        return '<hr/>';
-      default:
-        return '';
-    }
-  }).join('');
-}
-
 module.exports = {
-  parseMarkdown,
-  markdownToHtml
+  parseMarkdown
 };

@@ -6,7 +6,6 @@ const COLORS = {
   function: '#79C0FF',
   type: '#ACF2E8',
   property: '#9CDCFE',
-  operator: '#DFDFE0',
   flag: '#D9C97C',
   tag: '#7EE787',
   attribute: '#79C0FF',
@@ -255,6 +254,5 @@ function highlightCode(code, language) {
 }
 
 module.exports = {
-  highlightCode,
-  normalizeLanguage
+  highlightCode
 };

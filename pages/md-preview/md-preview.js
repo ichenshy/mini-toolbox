@@ -31,7 +31,6 @@ Page({
     viewMode: 'read',
     loading: false,
     error: '',
-    empty: true,
     pageStyleGlobal: ''
   },
 
@@ -114,7 +113,6 @@ Page({
 
     if (!path) {
       this.setData({
-        empty: true,
         error: '未获取到文件路径',
         loading: false
       });
@@ -132,7 +130,6 @@ Page({
 
     this.setData({
       loading: true,
-      empty: false,
       error: '',
       blocks: [],
       rawContent: '',
@@ -154,7 +151,6 @@ Page({
             rawContent: '',
             blocks: [],
             loading: false,
-            empty: true,
             error: '文件内容为空'
           });
           return;
@@ -170,7 +166,6 @@ Page({
             rawContent: content,
             blocks,
             loading: false,
-            empty: false,
             error: ''
           });
           this.clearRetryTimers();
@@ -189,7 +184,6 @@ Page({
         console.error('读取 Markdown 文件失败:', err);
         this.setData({
           loading: false,
-          empty: true,
           error: `读取文件失败：${err.errMsg || '请重试'}`
         });
       }

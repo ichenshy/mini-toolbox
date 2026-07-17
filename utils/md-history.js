@@ -188,7 +188,6 @@ async function clearMarkdownHistory() {
 }
 
 module.exports = {
-  getHistoryDir,
   isHistoryPath,
   saveMarkdownHistory,
   listMarkdownHistory,

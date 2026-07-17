@@ -15,7 +15,6 @@ Page({
   },
 
   loadPageLayoutInfo() {
-    const rect = wx.getMenuButtonBoundingClientRect()
     const windowInfo = wx.getWindowInfo();
     const pageStyleGlobal = `--status-bar-height: ${windowInfo.statusBarHeight}px;`
     this.setData({ pageStyleGlobal })
