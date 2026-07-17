@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# WeChat DevTools
+project.private.config.json
+
+# Node
+node_modules/
+miniprogram_npm/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build / artifacts
+dist/
+sourcemap.zip
+*.map
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.*
