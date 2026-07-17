@@ -4,7 +4,7 @@
       <view class="nav-back" bindtap="goBack">‹</view>
       <view class="header-text">
         <text class="title">生成历史</text>
-        <text class="subtitle">查看、打开或清理已生成的 PDF</text>
+        <text class="subtitle">点击卡片打开，也可分享或清理 PDF</text>
       </view>
     </view>
   </view>
@@ -12,7 +12,11 @@
   <view class="content">
     <view class="history-list" wx:if="{{historyList.length > 0}}">
       <block wx:for="{{historyList}}" wx:key="fileName">
-        <view class="theme-card history-item">
+        <view
+          class="theme-card history-item"
+          bindtap="openPDF"
+          data-file-path="{{item.filePath}}"
+        >
           <view class="file-info">
             <text class="file-name">{{item.fileName}}</text>
             <view class="file-details">
@@ -24,12 +28,13 @@
           <view class="file-actions">
             <view
               class="chip chip-primary"
-              bindtap="openPDF"
+              catchtap="sharePDF"
               data-file-path="{{item.filePath}}"
-            >打开</view>
+              data-file-name="{{item.fileName}}"
+            >分享</view>
             <view
               class="chip chip-danger"
-              bindtap="deletePDF"
+              catchtap="deletePDF"
               data-file-path="{{item.filePath}}"
               data-file-name="{{item.fileName}}"
             >删除</view>

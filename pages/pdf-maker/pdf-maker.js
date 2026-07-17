@@ -1,4 +1,5 @@
 const jsPDF = require('../../utils/my_jspdf.js');
+const { readFileCompat } = require('../../utils/read-file.js');
 
 Page({
   data: {
@@ -297,19 +298,8 @@ Page({
         const x = (pageWidth - scaledWidth) / 2;
         const y = this.data.combineImages ? currentY : (pageHeight - scaledHeight) / 2;
 
-        // 读取图片数据
-        const imageData = await new Promise((resolve, reject) => {
-          wx.getFileSystemManager().readFile({
-            filePath: imagePath,
-            success: (res) => {
-              resolve(res.data);
-            },
-            fail: (err) => {
-              console.error('读取图片数据失败:', err);
-              reject(err);
-            }
-          });
-        });
+        // 读取图片数据（兼容开发者工具 http://tmp 路径）
+        const imageData = await readFileCompat(imagePath);
 
         // 将图片添加到PDF
         try {

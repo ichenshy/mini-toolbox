@@ -79,6 +79,10 @@
   gap: 24rpx;
 }
 
+.history-item:active {
+  opacity: 0.88;
+}
+
 .file-info {
   flex: 1;
   min-width: 0;

@@ -34,10 +34,10 @@
 
 ## 技术说明
 
-- 渲染：Skyline + glass-easel
+- 渲染：Skyline + glass-easel（Markdown 预览页使用 webview 渲染器以兼容富文本组件）
 - 主题：暖纸色卡片风格（`static/public.wxss`）
 - PDF：基于 jsPDF 封装（`utils/my_jspdf.js`）
-- Markdown：自研解析与高亮（`utils/markdown.js`、`utils/highlight.js`）
+- Markdown：`marked` 解析 + `mp-html` 组件渲染（`utils/md-render.js`、`components/mp-html`）
 
 ## 目录结构
 
@@ -49,10 +49,12 @@ pages/
   md-preview/    # Markdown 预览
   md-history/    # Markdown 阅读历史
 utils/
-  markdown.js
-  highlight.js
+  md-render.js   # marked 封装
+  marked.min.js  # Markdown 解析库
   material.js    # 聊天素材转发
   md-history.js  # Markdown 历史存储
+components/
+  mp-html/       # 富文本渲染组件
 static/
   public.wxss    # 公共主题
 ```

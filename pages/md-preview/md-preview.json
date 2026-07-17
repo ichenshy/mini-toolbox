@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "Markdown 预览",
-  "usingComponents": {}
+  "renderer": "webview",
+  "usingComponents": {
+    "mp-html": "/components/mp-html/index"
+  }
 }

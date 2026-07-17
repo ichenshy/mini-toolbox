@@ -55,6 +55,48 @@ Page({
     });
   },
 
+  shareMarkdown(e) {
+    const { filePath, fileName } = e.currentTarget.dataset;
+    this.shareLocalFile(filePath, fileName);
+  },
+
+  shareLocalFile(filePath, fileName) {
+    if (!filePath) {
+      wx.showToast({
+        title: '文件不存在',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (!wx.canIUse('shareFileMessage')) {
+      wx.showToast({
+        title: '当前微信版本不支持分享文件',
+        icon: 'none'
+      });
+      return;
+    }
+
+    wx.shareFileMessage({
+      filePath,
+      fileName: fileName || '',
+      fail: (err) => {
+        const msg = String((err && err.errMsg) || '');
+        // 用户取消分享也会走 fail，不提示错误
+        if (/cancel/i.test(msg)) {
+          return;
+        }
+        console.error('分享文件失败:', err);
+        wx.showToast({
+          title: /开发者工具|devtools/i.test(msg)
+            ? '分享失败，请在真机重试'
+            : '分享失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
   deleteMarkdown(e) {
     const { filePath, fileName } = e.currentTarget.dataset;
 

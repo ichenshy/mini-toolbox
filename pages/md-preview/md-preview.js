@@ -1,6 +1,7 @@
 const { getChatMaterial, getChatMaterialOptions } = require('../../utils/material.js');
-const { parseMarkdown } = require('../../utils/markdown.js');
+const { markdownToHtml } = require('../../utils/md-render.js');
 const { saveMarkdownHistory, isHistoryPath } = require('../../utils/md-history.js');
+const { readFileCompat } = require('../../utils/read-file.js');
 
 function normalizeTitle(text) {
   return String(text || '')
@@ -8,31 +9,51 @@ function normalizeTitle(text) {
     .replace(/\.md$/i, '');
 }
 
-function dedupeHeadingBlocks(blocks, fileName) {
-  if (!blocks.length || blocks[0].type !== 'heading' || blocks[0].level !== 1) {
-    return blocks;
-  }
-
-  const fileTitle = normalizeTitle(fileName);
-  const headingTitle = normalizeTitle(blocks[0].text);
-
-  if (fileTitle && headingTitle && fileTitle === headingTitle) {
-    return blocks.slice(1);
-  }
-
-  return blocks;
+function escapeRegExp(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+function stripDuplicateTitle(markdown, fileName) {
+  const title = normalizeTitle(fileName);
+  if (!title) {
+    return markdown;
+  }
+
+  const pattern = new RegExp(`^\\s*#\\s+${escapeRegExp(title)}\\s*\\n+`, 'i');
+  return String(markdown || '').replace(pattern, '');
+}
+
+/** mp-html 标签样式，贴近暖纸主题 */
+const MD_TAG_STYLE = {
+  h1: 'font-size:28px;font-weight:700;line-height:1.3;color:#2c2416;margin:8px 0 12px;letter-spacing:-0.3px;',
+  h2: 'font-size:22px;font-weight:700;line-height:1.35;color:#2c2416;margin:20px 0 10px;letter-spacing:-0.2px;',
+  h3: 'font-size:18px;font-weight:600;line-height:1.4;color:#2c2416;margin:16px 0 8px;',
+  h4: 'font-size:15px;font-weight:600;line-height:1.4;color:rgba(74,58,36,0.68);margin:14px 0 8px;',
+  h5: 'font-size:15px;font-weight:600;line-height:1.4;color:rgba(74,58,36,0.68);margin:12px 0 6px;',
+  h6: 'font-size:15px;font-weight:600;line-height:1.4;color:rgba(74,58,36,0.68);margin:12px 0 6px;',
+  p: 'font-size:15px;line-height:1.65;color:#2c2416;margin:0 0 12px;letter-spacing:-0.1px;',
+  li: 'font-size:15px;line-height:1.55;color:#2c2416;margin:4px 0;',
+  ul: 'padding-left:22px;margin:0 0 12px;',
+  ol: 'padding-left:22px;margin:0 0 12px;',
+  blockquote: 'margin:0 0 14px;padding:10px 14px;border-left:4px solid #d4b896;background:#fff9f0;color:rgba(74,58,36,0.68);font-size:15px;line-height:1.55;',
+  a: 'color:#9a7b4f;text-decoration:underline;',
+  table: 'border-collapse:collapse;width:100%;font-size:13px;margin:0 0 14px;background:#fffcf7;',
+  th: 'border:1px solid rgba(120,90,50,0.12);padding:8px 10px;background:#efe6d8;color:rgba(74,58,36,0.68);font-weight:600;text-align:left;',
+  td: 'border:1px solid rgba(120,90,50,0.12);padding:8px 10px;color:#2c2416;',
+  hr: 'border:none;border-top:1px solid rgba(120,90,50,0.16);margin:16px 0;',
+  img: 'max-width:100%;border-radius:8px;margin:8px 0;'
+};
 
 Page({
   data: {
     displayTitle: '',
-    blocks: [],
+    htmlContent: '',
     rawContent: '',
     viewMode: 'read',
     loading: false,
     error: '',
-    empty: true,
-    pageStyleGlobal: ''
+    pageStyleGlobal: '',
+    tagStyle: MD_TAG_STYLE
   },
 
   onLoad(options) {
@@ -109,12 +130,16 @@ Page({
     this.loadMarkdownFile(material);
   },
 
+  renderMarkdown(content, displayTitle) {
+    const markdown = stripDuplicateTitle(content, displayTitle);
+    return markdownToHtml(markdown);
+  },
+
   loadMarkdownFile(material) {
     const { path, name } = material;
 
     if (!path) {
       this.setData({
-        empty: true,
         error: '未获取到文件路径',
         loading: false
       });
@@ -132,29 +157,25 @@ Page({
 
     this.setData({
       loading: true,
-      empty: false,
       error: '',
-      blocks: [],
+      htmlContent: '',
       rawContent: '',
       viewMode: 'read',
       displayTitle
     });
 
-    wx.getFileSystemManager().readFile({
-      filePath: path,
-      encoding: 'utf8',
-      success: (res) => {
+    readFileCompat(path, { encoding: 'utf8' })
+      .then((data) => {
         if (loadToken !== this._loadToken) {
           return;
         }
 
-        const content = String(res.data || '');
+        const content = String(data || '');
         if (!content) {
           this.setData({
             rawContent: '',
-            blocks: [],
+            htmlContent: '',
             loading: false,
-            empty: true,
             error: '文件内容为空'
           });
           return;
@@ -165,12 +186,22 @@ Page({
             return;
           }
 
-          const blocks = dedupeHeadingBlocks(parseMarkdown(content), displayTitle);
+          let htmlContent = '';
+          try {
+            htmlContent = this.renderMarkdown(content, displayTitle);
+          } catch (error) {
+            console.error('Markdown 渲染失败:', error);
+            this.setData({
+              loading: false,
+              error: '文档解析失败，请检查 Markdown 格式'
+            });
+            return;
+          }
+
           this.setData({
             rawContent: content,
-            blocks,
+            htmlContent,
             loading: false,
-            empty: false,
             error: ''
           });
           this.clearRetryTimers();
@@ -181,19 +212,17 @@ Page({
             loadToken
           });
         }, 0);
-      },
-      fail: (err) => {
+      })
+      .catch((err) => {
         if (loadToken !== this._loadToken) {
           return;
         }
         console.error('读取 Markdown 文件失败:', err);
         this.setData({
           loading: false,
-          empty: true,
-          error: `读取文件失败：${err.errMsg || '请重试'}`
+          error: `读取文件失败：${(err && err.errMsg) || '请重试'}`
         });
-      }
-    });
+      });
   },
 
   async persistHistory({ name, content, sourcePath, loadToken }) {
@@ -270,17 +299,6 @@ Page({
         });
       }
     });
-  },
-
-  copyCode(e) {
-    const { index } = e.currentTarget.dataset;
-    const block = this.data.blocks[index];
-
-    if (!block || block.type !== 'code' || !block.content) {
-      return;
-    }
-
-    this.copyToClipboard(block.content);
   },
 
   copySource() {

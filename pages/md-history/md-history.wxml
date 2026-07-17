@@ -4,7 +4,7 @@
       <view class="nav-back" bindtap="goBack">‹</view>
       <view class="header-text">
         <text class="title">阅读历史</text>
-        <text class="subtitle">打开过的 Markdown 会保存在本地</text>
+        <text class="subtitle">点击卡片打开，也可分享到微信</text>
       </view>
     </view>
   </view>
@@ -12,7 +12,12 @@
   <view class="content">
     <view class="history-list" wx:if="{{historyList.length > 0}}">
       <block wx:for="{{historyList}}" wx:key="filePath">
-        <view class="theme-card history-item">
+        <view
+          class="theme-card history-item"
+          bindtap="openMarkdown"
+          data-file-path="{{item.filePath}}"
+          data-file-name="{{item.fileName}}"
+        >
           <view class="file-info">
             <text class="file-name">{{item.fileName}}</text>
             <view class="file-details">
@@ -24,13 +29,13 @@
           <view class="file-actions">
             <view
               class="chip chip-primary"
-              bindtap="openMarkdown"
+              catchtap="shareMarkdown"
               data-file-path="{{item.filePath}}"
               data-file-name="{{item.fileName}}"
-            >打开</view>
+            >分享</view>
             <view
               class="chip chip-danger"
-              bindtap="deleteMarkdown"
+              catchtap="deleteMarkdown"
               data-file-path="{{item.filePath}}"
               data-file-name="{{item.fileName}}"
             >删除</view>

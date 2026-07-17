@@ -6,7 +6,6 @@ const COLORS = {
   function: '#79C0FF',
   type: '#ACF2E8',
   property: '#9CDCFE',
-  operator: '#DFDFE0',
   flag: '#D9C97C',
   tag: '#7EE787',
   attribute: '#79C0FF',
@@ -82,23 +81,46 @@ function normalizeLanguage(language) {
   return map[lang] || lang || 'plain';
 }
 
-function applyPattern(source, regex, replacer) {
-  return source.replace(regex, (...args) => {
-    const match = args[0];
-    const offset = args[args.length - 2];
-    if (typeof offset !== 'number') {
-      return match;
+function isStyled(text) {
+  return String(text).includes('style="color:');
+}
+
+/**
+ * 在尚未高亮的文本片段上应用替换，跳过已有 HTML 标签，避免二次污染。
+ */
+function mapPlainSegments(source, mapper) {
+  return String(source).replace(/(<[^>]+>)|([^<]+)/g, (full, tag, text) => {
+    if (tag) {
+      return tag;
     }
-    return replacer(match, offset, ...args);
+    return mapper(text || '');
+  });
+}
+
+function applyPattern(source, regex, replacer) {
+  return mapPlainSegments(source, (segment) => {
+    return segment.replace(regex, (...args) => {
+      const offset = args[args.length - 2];
+      if (typeof offset !== 'number') {
+        return args[0];
+      }
+      return replacer(...args);
+    });
   });
 }
 
 function highlightCommentsAndStrings(source) {
   let result = source;
 
-  result = applyPattern(result, /(\/\*[\s\S]*?\*\/|--[^\n]*|#(?!!)[^\n]*)/g, (match) => span('comment', match));
+  result = applyPattern(result, /(\/\*[\s\S]*?\*\/|--[^\n]*|#(?!!)[^\n]*)/g, (match) => {
+    if (isStyled(match)) {
+      return match;
+    }
+    return span('comment', match);
+  });
+
   result = applyPattern(result, /(&quot;(?:\\.|[^&])*?&quot;|'(?:\\.|[^'])*?'|`(?:\\.|[^`])*?`)/g, (match) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return span('string', match);
@@ -109,7 +131,7 @@ function highlightCommentsAndStrings(source) {
 
 function highlightNumbers(source) {
   return applyPattern(source, /\b(\d+(?:\.\d+)?)\b/g, (match) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return span('number', match);
@@ -119,7 +141,7 @@ function highlightNumbers(source) {
 function highlightKeywords(source, keywords) {
   const pattern = new RegExp(`\\b(${Array.from(keywords).join('|')})\\b`, 'gi');
   return applyPattern(source, pattern, (match) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return span('keyword', match);
@@ -127,11 +149,11 @@ function highlightKeywords(source, keywords) {
 }
 
 function highlightFunctions(source) {
-  return applyPattern(source, /\b([A-Za-z_][\w]*)\s*(?=\()/g, (match, offset, full, name) => {
-    if (match.includes('style="color:')) {
+  return applyPattern(source, /\b([A-Za-z_][\w]*)(?=\s*\()/g, (match, name) => {
+    if (isStyled(match)) {
       return match;
     }
-    return `${span('function', name)}(`;
+    return span('function', name);
   });
 }
 
@@ -161,16 +183,24 @@ function highlightPython(source) {
 
 function highlightJson(source) {
   let result = source;
-  result = applyPattern(result, /(&quot;(?:\\.|[^&])*?&quot;)(\s*:)/g, (_, key, colon) => `${span('property', key)}${colon}`);
-  result = applyPattern(result, /:\s*(&quot;(?:\\.|[^&])*?&quot;)/g, (match, str) => `: ${span('string', str)}`);
-  result = applyPattern(result, /:\s*\b(true|false|null)\b/g, (match, value) => `: ${span('keyword', value)}`);
+  result = applyPattern(result, /(&quot;(?:\\.|[^&])*?&quot;)(\s*:)/g, (match, key, colon) => {
+    return `${span('property', key)}${colon}`;
+  });
+  result = applyPattern(result, /:\s*(&quot;(?:\\.|[^&])*?&quot;)/g, (match, str) => {
+    return `: ${span('string', str)}`;
+  });
+  result = applyPattern(result, /:\s*\b(true|false|null)\b/g, (match, value) => {
+    return `: ${span('keyword', value)}`;
+  });
   result = highlightNumbers(result);
   return result;
 }
 
 function highlightBash(source) {
   let result = highlightCommentsAndStrings(source);
-  result = applyPattern(result, /(^|\s)(-[a-zA-Z]+)/g, (_, prefix, flag) => `${prefix}${span('flag', flag)}`);
+  result = applyPattern(result, /(^|\s)(-[a-zA-Z]+)/g, (match, prefix, flag) => {
+    return `${prefix}${span('flag', flag)}`;
+  });
   result = highlightKeywords(result, BASH_KEYWORDS);
   return result;
 }
@@ -179,7 +209,7 @@ function highlightJava(source) {
   let result = highlightCommentsAndStrings(source);
   result = highlightKeywords(result, JAVA_KEYWORDS);
   result = applyPattern(result, /\b([A-Z][\w]*)\b/g, (match) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return span('type', match);
@@ -193,13 +223,13 @@ function highlightCss(source) {
   let result = highlightCommentsAndStrings(source);
   result = applyPattern(result, /([.#][\w-]+)/g, (match) => span('tag', match));
   result = applyPattern(result, /([\w-]+)(\s*:)/g, (match, prop, colon) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return `${span('property', prop)}${colon}`;
   });
   result = applyPattern(result, /(:\s*)([^;{}]+)/g, (match, prefix, value) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return `${prefix}${span('string', value.trim())}`;
@@ -210,18 +240,20 @@ function highlightCss(source) {
 function highlightMarkup(source) {
   let result = source;
   result = applyPattern(result, /(&lt;\/?)([\w-]+)/g, (match, open, tag) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return `${open}${span('tag', tag)}`;
   });
   result = applyPattern(result, /([\w-]+)(=)/g, (match, attr, eq) => {
-    if (match.includes('style="color:')) {
+    if (isStyled(match)) {
       return match;
     }
     return `${span('attribute', attr)}${eq}`;
   });
-  result = applyPattern(result, /(=)(&quot;(?:\\.|[^&])*?&quot;)/g, (match, eq, str) => `${eq}${span('string', str)}`);
+  result = applyPattern(result, /(=)(&quot;(?:\\.|[^&])*?&quot;)/g, (match, eq, str) => {
+    return `${eq}${span('string', str)}`;
+  });
   return result;
 }
 
@@ -245,13 +277,24 @@ const HIGHLIGHTERS = {
   plain: highlightGeneric
 };
 
+/**
+ * 返回带语法高亮的代码块 HTML（深色主题）。
+ */
 function highlightCode(code, language) {
   const lang = normalizeLanguage(language);
   const escaped = escapeHtml(String(code || ''));
   const highlighter = HIGHLIGHTERS[lang] || highlightGeneric;
   const body = highlighter(escaped);
 
-  return `<div style="font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-all;color:${COLORS.default}">${body}</div>`;
+  return (
+    `<pre style="background:#1f1a14;color:#f7f1e8;padding:14px 16px;border-radius:12px;` +
+    `overflow:auto;font-size:12px;line-height:1.55;margin:0 0 14px;` +
+    `white-space:pre-wrap;word-break:break-word;` +
+    `font-family:SF Mono,Menlo,ui-monospace,monospace;` +
+    `border:1px solid rgba(255,245,230,0.08);">` +
+    `<code style="color:#f7f1e8;background:transparent;padding:0;` +
+    `font-size:12px;line-height:1.55;font-family:inherit;">${body}</code></pre>`
+  );
 }
 
 module.exports = {

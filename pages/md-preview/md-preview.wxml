@@ -42,67 +42,17 @@
       wx:elif="{{rawContent}}"
     >
       <view class="document-body" wx:if="{{viewMode === 'read'}}">
-        <block wx:for="{{blocks}}" wx:key="index">
-          <view class="md-heading" wx:if="{{item.type === 'heading'}}">
-            <text class="heading-text level-{{item.level}}">{{item.text}}</text>
-          </view>
-
-          <view class="theme-card text-group" wx:elif="{{item.type === 'paragraph'}}">
-            <rich-text class="md-paragraph" nodes="{{item.html}}"></rich-text>
-          </view>
-
-          <view class="code-group" wx:elif="{{item.type === 'code'}}">
-            <view class="code-block">
-              <view class="code-header">
-                <text class="code-lang">{{item.language}}</text>
-                <view class="copy-btn" catchtap="copyCode" data-index="{{index}}" aria-label="复制">
-                  <view class="copy-icon">
-                    <view class="copy-icon-back"></view>
-                    <view class="copy-icon-front"></view>
-                  </view>
-                </view>
-              </view>
-              <rich-text class="code-content" nodes="{{item.html}}"></rich-text>
-            </view>
-          </view>
-
-          <view class="theme-card table-group" wx:elif="{{item.type === 'table'}}">
-            <scroll-view scroll-x class="table-scroll" enhanced show-scrollbar="{{false}}">
-              <view class="table-wrap" style="{{item.tableStyle}}">
-                <view class="table-row table-header" wx:if="{{item.hasHeader}}">
-                  <view class="table-cell" style="{{item.cellStyle}}" wx:for="{{item.headers}}" wx:key="index">{{item}}</view>
-                </view>
-                <view
-                  class="table-row"
-                  wx:for="{{item.rows}}"
-                  wx:for-item="row"
-                  wx:key="index"
-                >
-                  <view class="table-cell" style="{{item.cellStyle}}" wx:for="{{row}}" wx:for-item="cell" wx:key="index">{{cell}}</view>
-                </view>
-              </view>
-            </scroll-view>
-          </view>
-
-          <view class="theme-card list-group" wx:elif="{{item.type === 'list'}}">
-            <view
-              class="list-row"
-              wx:for="{{item.items}}"
-              wx:for-item="listItem"
-              wx:for-index="listIndex"
-              wx:key="listIndex"
-            >
-              <text class="list-marker {{item.ordered ? 'ordered' : 'dot'}}">{{listItem.marker}}</text>
-              <rich-text class="list-text" nodes="{{listItem.html}}"></rich-text>
-            </view>
-          </view>
-
-          <view class="theme-card quote-group" wx:elif="{{item.type === 'blockquote'}}">
-            <rich-text class="md-blockquote" nodes="{{item.html}}"></rich-text>
-          </view>
-
-          <view class="md-spacer" wx:elif="{{item.type === 'hr'}}"></view>
-        </block>
+        <view class="theme-card md-card">
+          <mp-html
+            content="{{htmlContent}}"
+            tag-style="{{tagStyle}}"
+            container-style="padding:4px 2px;"
+            selectable="{{true}}"
+            scroll-table="{{true}}"
+            set-title="{{false}}"
+            copy-link="{{true}}"
+          />
+        </view>
       </view>
 
       <view class="theme-card source-group" wx:else>

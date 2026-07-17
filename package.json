@@ -1,0 +1,10 @@
+{
+  "name": "mini-toolbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "微信小程序小工具箱",
+  "dependencies": {
+    "marked": "^15.0.12",
+    "mp-html": "^2.5.2"
+  }
+}
