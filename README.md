@@ -5,6 +5,12 @@
 - **图片转 PDF**：多图排序、旋转、合并导出，支持生成历史
 - **Markdown 预览**：阅读排版 / 原文切换、代码高亮、表格展示，支持阅读历史与一键复制
 
+## 致谢
+
+本项目的「图片转 PDF」能力基于 [sunzsh](https://github.com/sunzsh) 大佬的开源项目 [sunzsh/pic2pdf](https://github.com/sunzsh/pic2pdf) 改造而来，在此致谢。
+
+在原项目基础上，本仓库继续扩展了小工具箱首页、PDF 历史管理、Markdown 预览与阅读历史，以及统一的暖纸主题等能力。
+
 ## 功能概览
 
 ### 首页
