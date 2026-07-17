@@ -3,7 +3,24 @@
   "compileType": "miniprogram",
   "libVersion": "3.14.3",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": ".git"
+      },
+      {
+        "type": "folder",
+        "value": ".idea"
+      },
+      {
+        "type": "suffix",
+        "value": ".DS_Store"
+      },
+      {
+        "type": "file",
+        "value": "sourcemap.zip"
+      }
+    ],
     "include": []
   },
   "setting": {
@@ -21,7 +38,7 @@
     },
     "compileWorklet": false,
     "uglifyFileName": false,
-    "uploadWithSourceMap": true,
+    "uploadWithSourceMap": false,
     "packNpmManually": false,
     "minifyWXSS": true,
     "minifyWXML": true,

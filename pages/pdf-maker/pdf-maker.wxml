@@ -1,47 +1,78 @@
-<view class="container" style="{{pageStyleGlobal}}">
+<view class="page" style="{{pageStyleGlobal}}">
   <view class="header">
-    <text class="title">图片转PDF工具</text>
+    <view class="nav-row">
+      <view class="back-btn" bindtap="goHome">‹</view>
+      <view class="header-text">
+        <text class="title">图片转 PDF</text>
+        <text class="subtitle">选择图片、调整顺序，一键合并导出</text>
+      </view>
+    </view>
   </view>
-  
+
   <view class="content">
-    <view class="image-list">
-      <block wx:for="{{images}}" wx:key="index">
-        <view class="image-item {{draggingIndex === index ? 'dragging' : ''}} {{draggingTarget === index ? 'target' : ''}}"
-                      bindtouchstart="onTouchStart" 
-                      bindtouchmove="onTouchMove" 
-                      bindtouchend="onTouchEnd" 
-                      data-index="{{index}}">
-          <image src="{{item.path}}" mode="aspectFill" bindtap="previewImage" data-url="{{item.path}}" style="transform: rotate({{item.rotation}}deg);"></image>
-          <view class="delete-btn" catchtap="deleteImage" data-index="{{index}}">×</view>
-          <view class="rotate-btn" catchtap="rotateImage" data-index="{{index}}">↻</view>
+    <view class="theme-card gallery-card">
+      <view class="card-head">
+        <text class="card-title">图片列表</text>
+        <text class="card-meta">{{images.length}}/32</text>
+      </view>
+
+      <view class="image-list">
+        <block wx:for="{{images}}" wx:key="index">
+          <view
+            class="image-item {{draggingIndex === index ? 'dragging' : ''}} {{draggingTarget === index ? 'target' : ''}}"
+            bindtouchstart="onTouchStart"
+            bindtouchmove="onTouchMove"
+            bindtouchend="onTouchEnd"
+            data-index="{{index}}"
+          >
+            <image
+              src="{{item.path}}"
+              mode="aspectFill"
+              bindtap="previewImage"
+              data-url="{{item.path}}"
+              style="transform: rotate({{item.rotation}}deg);"
+            ></image>
+            <view class="delete-btn" catchtap="deleteImage" data-index="{{index}}">×</view>
+            <view class="rotate-btn" catchtap="rotateImage" data-index="{{index}}">↻</view>
+          </view>
+        </block>
+
+        <view class="add-btn" bindtap="chooseImage" wx:if="{{images.length < 32}}">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加图片</text>
         </view>
-      </block>
-      <view class="add-btn" bindtap="chooseImage" wx:if="{{images.length < 32}}">
-        <text class="add-icon">+</text>
       </view>
     </view>
   </view>
 
   <view class="footer">
-    <view class="options">
+    <view class="theme-card options-card">
       <view class="option-item">
-        <text>尽量合并图片到同一页</text>
-        <switch checked="{{combineImages}}" bindchange="onCombineImagesChange" />
+        <text class="option-label">尽量合并图片到同一页</text>
+        <switch checked="{{combineImages}}" bindchange="onCombineImagesChange" color="#9a7b4f" />
       </view>
       <view class="option-item">
-        <text>页面边距 (mm)</text>
-        <input type="number" value="{{margin}}" bindchange="onMarginChange" class="margin-input" />
+        <text class="option-label">页面边距 (mm)</text>
+        <input type="number" value="{{margin}}" bindchange="onMarginChange" class="option-input" />
       </view>
-      <view class="option-item">
-        <text>自定义文件名</text>
-        <input type="text" value="{{customFilename}}" bindchange="onFilenameChange" class="filename-input" placeholder="不填则使用时间戳" />
+      <view class="option-item option-item-last">
+        <text class="option-label">自定义文件名</text>
+        <input
+          type="text"
+          value="{{customFilename}}"
+          bindchange="onFilenameChange"
+          class="option-input option-input-wide"
+          placeholder="不填则使用时间戳"
+          placeholder-class="option-placeholder"
+        />
       </view>
     </view>
+
     <view class="button-group">
-      <button class="history-btn" bindtap="goToHistory">历史记录</button>
-      <button class="generate-btn" bindtap="generatePDF" disabled="{{images.length === 0}}">
-        生成PDF
+      <button class="theme-btn theme-btn-secondary history-btn" bindtap="goToHistory">历史记录</button>
+      <button class="theme-btn theme-btn-primary generate-btn" bindtap="generatePDF" disabled="{{images.length === 0}}">
+        生成 PDF
       </button>
     </view>
   </view>
-</view> 
+</view>

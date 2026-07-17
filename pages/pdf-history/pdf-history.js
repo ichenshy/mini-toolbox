@@ -297,23 +297,13 @@ Page({
     }
   },
 
-  // 返回生成页面
   goBack() {
-    console.log('返回按钮被点击');
-    // 直接跳转到PDF生成页面
-    wx.redirectTo({
-      url: '/pages/pdf-maker/pdf-maker',
-      success: () => {
-        console.log('跳转到PDF生成页面成功');
-      },
-      fail: (err) => {
-        console.error('跳转失败:', err);
-        wx.showToast({
-          title: '跳转失败',
-          icon: 'none'
+    wx.navigateBack({
+      fail: () => {
+        wx.redirectTo({
+          url: '/pages/pdf-maker/pdf-maker'
         });
       }
     });
   }
 });
-

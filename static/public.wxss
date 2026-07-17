@@ -1,6 +1,72 @@
-.flex {
-    display: flex;
+page {
+  --paper: #f6f1e8;
+  --paper-deep: #efe6d8;
+  --card: #fffcf7;
+  --card-line: rgba(120, 90, 50, 0.1);
+  --ink: #2c2416;
+  --ink-soft: rgba(74, 58, 36, 0.68);
+  --ink-faint: rgba(74, 58, 36, 0.38);
+  --accent: #9a7b4f;
+  --accent-soft: rgba(154, 123, 79, 0.16);
+  --danger: #b85c4a;
+  --danger-soft: rgba(184, 92, 74, 0.12);
+  --shadow: 0 10rpx 28rpx rgba(90, 60, 30, 0.07);
+  --shadow-strong: 0 12rpx 36rpx rgba(90, 60, 30, 0.1);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+.flex {
+  display: flex;
+}
+
 .flex-column {
-    flex-direction: column;
+  flex-direction: column;
+}
+
+.theme-card {
+  background: var(--card);
+  border-radius: 22rpx;
+  border: 1rpx solid var(--card-line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.theme-btn {
+  border: none;
+  border-radius: 40rpx;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.theme-btn::after {
+  border: none;
+}
+
+.theme-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.theme-btn-primary[disabled] {
+  background: rgba(154, 123, 79, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.theme-btn-secondary {
+  background: var(--paper-deep);
+  color: var(--ink);
+}
+
+.theme-btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.theme-btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1rpx solid rgba(154, 123, 79, 0.35);
 }

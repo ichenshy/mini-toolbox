@@ -202,6 +202,16 @@ Page({
     });
   },
 
+  goHome() {
+    wx.navigateBack({
+      fail: () => {
+        wx.reLaunch({
+          url: '/pages/home/home'
+        });
+      }
+    });
+  },
+
   // 生成PDF
   async generatePDF() {
     if (this.data.images.length === 0) {

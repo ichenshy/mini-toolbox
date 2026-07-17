@@ -1,0 +1,131 @@
+<view class="page" style="{{pageStyleGlobal}}">
+  <view class="header">
+    <view class="nav-row">
+      <view class="back-btn" bindtap="goHome">‹</view>
+      <view class="header-text">
+        <text class="title">{{displayTitle || 'Markdown 预览'}}</text>
+        <text class="subtitle">{{rawContent ? '阅读排版，或切换查看原文' : '从聊天打开，或选择本地 .md 文件'}}</text>
+      </view>
+      <view class="history-entry" bindtap="goToHistory">历史</view>
+    </view>
+
+    <view class="mode-switch" wx:if="{{rawContent}}">
+      <view
+        class="mode-item {{viewMode === 'read' ? 'active' : ''}}"
+        bindtap="switchViewMode"
+        data-mode="read"
+      >阅读</view>
+      <view
+        class="mode-item {{viewMode === 'source' ? 'active' : ''}}"
+        bindtap="switchViewMode"
+        data-mode="source"
+      >原文</view>
+    </view>
+  </view>
+
+  <view class="content">
+    <view class="theme-card state-card" wx:if="{{loading}}">
+      <text class="state-text">正在加载文档...</text>
+    </view>
+
+    <view class="theme-card state-card" wx:elif="{{error}}">
+      <text class="empty-title">加载失败</text>
+      <text class="state-text">{{error}}</text>
+      <button class="theme-btn theme-btn-primary action-btn" bindtap="chooseMarkdownFile">选择 Markdown 文件</button>
+    </view>
+
+    <scroll-view
+      class="preview-scroll"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      wx:elif="{{rawContent}}"
+    >
+      <view class="document-body" wx:if="{{viewMode === 'read'}}">
+        <block wx:for="{{blocks}}" wx:key="index">
+          <view class="md-heading" wx:if="{{item.type === 'heading'}}">
+            <text class="heading-text level-{{item.level}}">{{item.text}}</text>
+          </view>
+
+          <view class="theme-card text-group" wx:elif="{{item.type === 'paragraph'}}">
+            <rich-text class="md-paragraph" nodes="{{item.html}}"></rich-text>
+          </view>
+
+          <view class="code-group" wx:elif="{{item.type === 'code'}}">
+            <view class="code-block">
+              <view class="code-header">
+                <text class="code-lang">{{item.language}}</text>
+                <view class="copy-btn" catchtap="copyCode" data-index="{{index}}" aria-label="复制">
+                  <view class="copy-icon">
+                    <view class="copy-icon-back"></view>
+                    <view class="copy-icon-front"></view>
+                  </view>
+                </view>
+              </view>
+              <rich-text class="code-content" nodes="{{item.html}}"></rich-text>
+            </view>
+          </view>
+
+          <view class="theme-card table-group" wx:elif="{{item.type === 'table'}}">
+            <scroll-view scroll-x class="table-scroll" enhanced show-scrollbar="{{false}}">
+              <view class="table-wrap" style="{{item.tableStyle}}">
+                <view class="table-row table-header" wx:if="{{item.hasHeader}}">
+                  <view class="table-cell" style="{{item.cellStyle}}" wx:for="{{item.headers}}" wx:key="index">{{item}}</view>
+                </view>
+                <view
+                  class="table-row"
+                  wx:for="{{item.rows}}"
+                  wx:for-item="row"
+                  wx:key="index"
+                >
+                  <view class="table-cell" style="{{item.cellStyle}}" wx:for="{{row}}" wx:for-item="cell" wx:key="index">{{cell}}</view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+
+          <view class="theme-card list-group" wx:elif="{{item.type === 'list'}}">
+            <view
+              class="list-row"
+              wx:for="{{item.items}}"
+              wx:for-item="listItem"
+              wx:for-index="listIndex"
+              wx:key="listIndex"
+            >
+              <text class="list-marker {{item.ordered ? 'ordered' : 'dot'}}">{{listItem.marker}}</text>
+              <rich-text class="list-text" nodes="{{listItem.html}}"></rich-text>
+            </view>
+          </view>
+
+          <view class="theme-card quote-group" wx:elif="{{item.type === 'blockquote'}}">
+            <rich-text class="md-blockquote" nodes="{{item.html}}"></rich-text>
+          </view>
+
+          <view class="md-spacer" wx:elif="{{item.type === 'hr'}}"></view>
+        </block>
+      </view>
+
+      <view class="theme-card source-group" wx:else>
+        <view class="source-header">
+          <text class="source-label">原文</text>
+          <view class="copy-btn copy-btn-light" catchtap="copySource" aria-label="复制原文">
+            <view class="copy-icon copy-icon-light">
+              <view class="copy-icon-back"></view>
+              <view class="copy-icon-front"></view>
+            </view>
+          </view>
+        </view>
+        <text class="source-text" selectable="true">{{rawContent}}</text>
+      </view>
+
+      <view class="scroll-bottom-safe"></view>
+    </scroll-view>
+
+    <view class="theme-card state-card" wx:else>
+      <text class="empty-title">暂无文档</text>
+      <text class="empty-desc">从聊天中的 .md 文件点击「用其他应用打开」，或直接选择本地文件预览。</text>
+      <button class="theme-btn theme-btn-primary action-btn" bindtap="chooseMarkdownFile">选择 Markdown 文件</button>
+      <button class="theme-btn theme-btn-secondary action-btn secondary-btn" bindtap="goToHistory">阅读历史</button>
+    </view>
+  </view>
+</view>

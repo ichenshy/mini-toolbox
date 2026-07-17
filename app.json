@@ -1,14 +1,18 @@
 {
   "pages": [
+    "pages/home/home",
     "pages/pdf-maker/pdf-maker",
-    "pages/pdf-history/pdf-history"
+    "pages/pdf-history/pdf-history",
+    "pages/md-preview/md-preview",
+    "pages/md-history/md-history"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "图片转PDF工具",
+    "navigationBarBackgroundColor": "#f6f1e8",
+    "navigationBarTitleText": "小工具箱",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "navigationStyle": "custom",
+    "backgroundColor": "#f6f1e8"
   },
   "style": "v2",
   "renderer": "skyline",
@@ -29,5 +33,13 @@
     "scope.writePhotosAlbum": {
       "desc": "保存生成的PDF文件到相册"
     }
-  }
+  },
+  "supportedMaterials": [
+    {
+      "materialType": "text/markdown",
+      "name": "用${nickname}阅读",
+      "desc": "阅读 Markdown 文档",
+      "path": "pages/md-preview/md-preview"
+    }
+  ]
 }

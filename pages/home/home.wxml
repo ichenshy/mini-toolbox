@@ -1,0 +1,26 @@
+<view class="page" style="{{pageStyleGlobal}}">
+  <view class="hero">
+    <text class="brand">小工具箱</text>
+    <text class="tagline">选一个工具，马上开始</text>
+  </view>
+
+  <view class="tool-list">
+    <view class="theme-card tool-card" bindtap="goToPdfMaker">
+      <view class="tool-mark pdf-mark">PDF</view>
+      <view class="tool-body">
+        <text class="tool-name">图片转 PDF</text>
+        <text class="tool-desc">多图排序、合并导出，支持历史记录</text>
+      </view>
+      <text class="tool-arrow">›</text>
+    </view>
+
+    <view class="theme-card tool-card" bindtap="goToMdPreview">
+      <view class="tool-mark md-mark">MD</view>
+      <view class="tool-body">
+        <text class="tool-name">Markdown 预览</text>
+        <text class="tool-desc">阅读排版、查看来源，支持一键复制</text>
+      </view>
+      <text class="tool-arrow">›</text>
+    </view>
+  </view>
+</view>
