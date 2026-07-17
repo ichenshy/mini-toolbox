@@ -125,7 +125,6 @@
       <text class="empty-title">暂无文档</text>
       <text class="empty-desc">从聊天中的 .md 文件点击「用其他应用打开」，或直接选择本地文件预览。</text>
       <button class="theme-btn theme-btn-primary action-btn" bindtap="chooseMarkdownFile">选择 Markdown 文件</button>
-      <button class="theme-btn theme-btn-secondary action-btn secondary-btn" bindtap="goToHistory">阅读历史</button>
     </view>
   </view>
 </view>

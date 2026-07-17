@@ -12,6 +12,8 @@
 
 .header {
   padding: 16rpx 24rpx 20rpx;
+  padding-right: var(--capsule-right, 200rpx);
+  box-sizing: border-box;
 }
 
 .nav-row {
@@ -475,8 +477,4 @@
   font-size: 30rpx;
   padding: 20rpx 0;
   line-height: 1.4;
-}
-
-.secondary-btn {
-  margin-top: 16rpx;
 }

@@ -116,6 +116,15 @@
   line-height: 1.4;
 }
 
+.file-path {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  word-break: break-all;
+}
+
 .file-actions {
   display: flex;
   flex-direction: column;

@@ -19,6 +19,7 @@
               <text class="file-size">{{item.fileSize}}</text>
               <text class="file-date">{{item.createTime}}</text>
             </view>
+            <text class="file-path" selectable="true">{{item.filePath}}</text>
           </view>
           <view class="file-actions">
             <view
