@@ -1,4 +1,4 @@
-# 小工具箱（pic2pdf）
+# 小工具箱（mini-toolbox）
 
 微信小程序，提供两个常用工具：
 
@@ -60,9 +60,9 @@ static/
 ## 开发
 
 1. 使用微信开发者工具打开本项目
-2. 填入自己的 AppID（见 `project.config.json`）
+2. 在本地 `project.private.config.json` 中填入自己的 AppID（该文件已被 gitignore，勿提交）；仓库内 `project.config.json` 默认使用 `touristappid` 游客模式
 3. 编译预览
 
 ## 仓库
 
-https://github.com/ichenshy/pic2pdf
+https://github.com/ichenshy/mini-toolbox
