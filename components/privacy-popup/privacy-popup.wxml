@@ -1,0 +1,20 @@
+<view class="privacy-mask" wx:if="{{show}}" catchtouchmove="noop">
+  <view class="privacy-dialog">
+    <text class="privacy-title">用户隐私保护提示</text>
+    <view class="privacy-content">
+      <text>为从聊天记录选择文件，需您阅读并同意</text>
+      <text class="privacy-link" bindtap="openPrivacyContract">《用户隐私保护指引》</text>
+    </view>
+    <view class="privacy-actions">
+      <button class="privacy-btn privacy-btn-cancel" bindtap="handleDisagree">拒绝</button>
+      <button
+        id="privacy-agree-btn"
+        class="privacy-btn privacy-btn-ok"
+        open-type="agreePrivacyAuthorization"
+        bindagreeprivacyauthorization="handleAgree"
+      >
+        同意
+      </button>
+    </view>
+  </view>
+</view>

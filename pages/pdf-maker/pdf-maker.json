@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "图片转PDF",
-  "usingComponents": {}
+  "renderer": "webview",
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
+  }
 } 

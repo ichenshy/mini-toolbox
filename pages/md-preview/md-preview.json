@@ -2,6 +2,7 @@
   "navigationBarTitleText": "Markdown 预览",
   "renderer": "webview",
   "usingComponents": {
-    "mp-html": "/components/mp-html/index"
+    "mp-html": "/components/mp-html/index",
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
   }
 }

@@ -1,5 +1,13 @@
 const jsPDF = require('../../utils/my_jspdf.js');
-const { readFileCompat } = require('../../utils/read-file.js');
+const {
+  prepareImageForPdf,
+  buildPdfFileName,
+  getPdfErrorMessage,
+  inspectChatImage,
+  getSupportedFormatHint
+} = require('../../utils/image-pdf.js');
+
+const formatHint = getSupportedFormatHint();
 
 Page({
   data: {
@@ -12,7 +20,9 @@ Page({
     pageStyleGlobal: {},
     combineImages: false,
     margin: 10,
-    customFilename: ''  // 添加自定义文件名
+    customFilename: '',
+    formatHintMain: formatHint.main,
+    formatHintSub: formatHint.sub
   },
 
   onLoad() {
@@ -25,30 +35,98 @@ Page({
     this.setData({ pageStyleGlobal })
   },
 
-  // 选择图片
+  // 从聊天记录选择图片
   chooseImage() {
     wx.chooseMessageFile({
       count: 32 - this.data.images.length,
       type: 'image',
-      success: (res) => {
-        // 按照time字段排序
+      success: async (res) => {
         const sortedFiles = res.tempFiles.sort((a, b) => a.time - b.time);
-        
-        // 计算新图片的位置
-        const currentImages = this.data.images;
-        const newImages = sortedFiles.map((file, index) => {
-          return {
-            path: file.path,
-            rotation: 0  // 添加旋转角度属性
-          };
+        if (!sortedFiles.length) {
+          return;
+        }
+
+        wx.showLoading({
+          title: '检查图片格式...',
+          mask: true
         });
-        
-        this.setData({
-          images: [...currentImages, ...newImages]
-        });
+
+        const accepted = [];
+        const rejected = [];
+
+        try {
+          for (const file of sortedFiles) {
+            const result = await inspectChatImage(file);
+            if (result.supported) {
+              accepted.push({
+                path: file.path,
+                rotation: 0
+              });
+            } else {
+              rejected.push({
+                name: file.name || '未命名图片',
+                message: result.message
+              });
+            }
+          }
+        } finally {
+          wx.hideLoading();
+        }
+
+        if (accepted.length) {
+          this.setData({
+            images: [...this.data.images, ...accepted]
+          });
+        }
+
+        if (rejected.length) {
+          this.showRejectedImagesTip(rejected, accepted.length);
+        } else if (!accepted.length) {
+          wx.showToast({
+            title: '所选图片均不支持',
+            icon: 'none',
+            duration: 3000
+          });
+        }
       },
-      fail: () => {
+      fail: (err) => {
+        console.error('选择聊天图片失败:', err);
+        let title = '无法打开聊天文件';
+        if (err.errno === 112 || err.errno === 101100) {
+          title = '后台需声明「收集你选中的文件」';
+        } else if (err.errno === 101102) {
+          title = '需先同意隐私协议';
+        } else if (err.errMsg && /cancel/.test(err.errMsg)) {
+          return;
+        }
+        wx.showToast({
+          title,
+          icon: 'none',
+          duration: 3000
+        });
       }
+    });
+  },
+
+  showRejectedImagesTip(rejected, acceptedCount) {
+    if (rejected.length === 1) {
+      wx.showToast({
+        title: rejected[0].message,
+        icon: 'none',
+        duration: 3000
+      });
+      return;
+    }
+
+    const detail = rejected.map((item) => `${item.name}: ${item.message}`).join('\n');
+    const content = acceptedCount > 0
+      ? `已添加 ${acceptedCount} 张。\n${detail}`
+      : detail;
+
+    wx.showModal({
+      title: `${rejected.length} 张图片未添加`,
+      content,
+      showCancel: false
     });
   },
 
@@ -223,181 +301,145 @@ Page({
       return;
     }
 
+    if (this.data.isGenerating) {
+      return;
+    }
+
     this.setData({ isGenerating: true });
     wx.showLoading({
       title: '正在生成PDF...',
     });
 
+    let currentImageIndex = 0;
+
     try {
-      // 创建PDF文档
       const doc = new jsPDF();
-      let currentPage = 1;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = this.data.margin;
-      let currentY = margin; // 当前页面的Y坐标
-      let maxContentWidth = pageWidth - 2 * margin;
-      let maxContentHeight = pageHeight - 2 * margin;
+      let currentY = margin;
+      const maxContentWidth = pageWidth - 2 * margin;
+      const maxContentHeight = pageHeight - 2 * margin;
 
-      // 处理所有图片
       for (let i = 0; i < this.data.images.length; i++) {
-        const imagePath = this.data.images[i].path;
+        currentImageIndex = i;
         const rotation = this.data.images[i].rotation;
+        let prepared;
 
-        // 获取图片信息
-        const imageInfo = await new Promise((resolve, reject) => {
-          wx.getImageInfo({
-            src: imagePath,
-            success: (res) => {
-              resolve(res);
-            },
-            fail: (err) => {
-              console.error('获取图片信息失败:', err);
-              reject(err);
-            }
-          });
-        });
+        try {
+          prepared = await prepareImageForPdf(this.data.images[i].path);
+        } catch (err) {
+          err.stage = err.stage || 'imageInfo';
+          throw err;
+        }
 
-        // 计算图片在PDF中的尺寸
-        let width = imageInfo.width;
-        let height = imageInfo.height;
+        let width = prepared.width;
+        let height = prepared.height;
 
-        
-        // 如果图片需要旋转，交换宽高
         if (rotation === 90 || rotation === 270) {
           [width, height] = [height, width];
-          // [maxContentWidth, maxContentHeight] = [maxContentHeight, maxContentWidth];
         }
 
         const scale = Math.min(
           maxContentWidth / width,
           maxContentHeight / height
         );
-        
         const scaledWidth = width * scale;
         const scaledHeight = height * scale;
 
-
-        // 如果不合并图片，每张图片都从新页面开始
         if (!this.data.combineImages) {
           if (i > 0) {
             doc.addPage();
-            currentPage++;
           }
           currentY = margin;
-        } else {
-          // 如果合并图片且当前页面放不下，添加新页面
-          if (currentY + scaledHeight > maxContentHeight + 1) {
-            doc.addPage();
-            currentPage++;
-            currentY = margin;
-          }
+        } else if (currentY + scaledHeight > maxContentHeight + 1) {
+          doc.addPage();
+          currentY = margin;
         }
 
-        // 计算图片位置（居中）
         const x = (pageWidth - scaledWidth) / 2;
         const y = this.data.combineImages ? currentY : (pageHeight - scaledHeight) / 2;
+        const adjustedX = Math.max(margin, x);
+        const adjustedY = Math.max(margin, y);
+        const adjustedWidth = Math.min(scaledWidth, maxContentWidth);
+        const adjustedHeight = Math.min(scaledHeight, maxContentHeight);
+        const uint8Array = new Uint8Array(prepared.data);
+        const format = prepared.format;
 
-        // 读取图片数据（兼容开发者工具 http://tmp 路径）
-        const imageData = await readFileCompat(imagePath);
-
-        // 将图片添加到PDF
         try {
-          // 调整图片位置和大小
-          const adjustedX = Math.max(margin, x);
-          const adjustedY = Math.max(margin, y);
-          const adjustedWidth = Math.min(scaledWidth, maxContentWidth);
-          const adjustedHeight = Math.min(scaledHeight, maxContentHeight);
-          
-          // 检测图片格式
-          let uint8Array = new Uint8Array(imageData);
-          const isPNG = uint8Array[0] === 0x89 && uint8Array[1] === 0x50;
-          const isJPEG = uint8Array[0] === 0xFF && uint8Array[1] === 0xD8;
           if (rotation === 90) {
-            doc.addImage(uint8Array, isJPEG ? 'JPEG' : (isPNG ? 'PNG' : ''), adjustedX + adjustedWidth, adjustedY + (adjustedHeight - adjustedWidth), adjustedHeight, adjustedWidth, '', 'NONE', 90);
+            doc.addImage(uint8Array, format, adjustedX + adjustedWidth, adjustedY + (adjustedHeight - adjustedWidth), adjustedHeight, adjustedWidth, '', 'NONE', 90);
           } else if (rotation === 180) {
-            doc.addImage(uint8Array, isJPEG ? 'JPEG' : (isPNG ? 'PNG' : ''), adjustedX + adjustedWidth, adjustedY - adjustedHeight, adjustedWidth, adjustedHeight, '', 'NONE', 180);
-          } else if (rotation === 270) { 
-            doc.addImage(uint8Array, isJPEG ? 'JPEG' : (isPNG ? 'PNG' : ''), adjustedX, adjustedY - adjustedWidth, adjustedHeight, adjustedWidth, '', 'NONE', 270);
-          }else {
-            doc.addImage(uint8Array, isJPEG ? 'JPEG' : (isPNG ? 'PNG' : ''), adjustedX, adjustedY, adjustedWidth, adjustedHeight, '', 'NONE', 0);
+            doc.addImage(uint8Array, format, adjustedX + adjustedWidth, adjustedY - adjustedHeight, adjustedWidth, adjustedHeight, '', 'NONE', 180);
+          } else if (rotation === 270) {
+            doc.addImage(uint8Array, format, adjustedX, adjustedY - adjustedWidth, adjustedHeight, adjustedWidth, '', 'NONE', 270);
+          } else {
+            doc.addImage(uint8Array, format, adjustedX, adjustedY, adjustedWidth, adjustedHeight, '', 'NONE', 0);
           }
-          
-          
-          // 更新当前Y坐标（仅在合并图片时）
-          if (this.data.combineImages) {
-            currentY += adjustedHeight + margin;
-          }
-          
         } catch (err) {
-          console.error('添加图片失败:', err);
-          console.error('错误堆栈:', err.stack);
+          err.stage = 'addImage';
           throw err;
         }
-      }
-      
-      const pdfData = doc.output('arraybuffer');
-      
-      const base64 = wx.arrayBufferToBase64(pdfData);
-      // 生成文件名
-      let fileName;
-      if (this.data.customFilename) {
-        fileName = `${this.data.customFilename}.pdf`;
-      } else {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        fileName = `${year}${month}${day}${hours}${minutes}${seconds}.pdf`;
-      }
-      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
-      
-      
-      await new Promise((resolve, reject) => {
-        wx.getFileSystemManager().writeFile({
-          filePath: filePath,
-          data: base64,
-          encoding: 'base64',
-          success: () => {
-            resolve();
-          },
-          fail: (err) => {
-            console.error('保存PDF文件失败:', err);
-            reject(err);
-          }
-        });
-      });
 
-      // 打开PDF文件
-      await new Promise((resolve, reject) => {
-        wx.openDocument({
-          filePath: filePath,
-          fileType: 'pdf',
-          showMenu: true,
-          success: () => {
-            resolve();
-          },
-          fail: (err) => {
-            console.error('打开PDF文件失败:', err);
-            reject(err);
-          }
+        if (this.data.combineImages) {
+          currentY += adjustedHeight + margin;
+        }
+      }
+
+      const pdfData = doc.output('arraybuffer');
+      const base64 = wx.arrayBufferToBase64(pdfData);
+      const fileName = buildPdfFileName(this.data.customFilename);
+      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+
+      try {
+        await new Promise((resolve, reject) => {
+          wx.getFileSystemManager().writeFile({
+            filePath,
+            data: base64,
+            encoding: 'base64',
+            success: resolve,
+            fail: reject
+          });
         });
-      });
+      } catch (err) {
+        err.stage = 'save';
+        throw err;
+      }
 
       wx.hideLoading();
-      wx.showToast({
-        title: 'PDF生成成功',
-        icon: 'success'
+
+      wx.openDocument({
+        filePath,
+        fileType: 'pdf',
+        showMenu: true,
+        success: () => {
+          wx.showToast({
+            title: 'PDF生成成功',
+            icon: 'success'
+          });
+        },
+        fail: (err) => {
+          console.error('打开PDF文件失败:', err);
+          wx.showModal({
+            title: 'PDF 已生成',
+            content: '文件已保存，可在历史记录中打开',
+            confirmText: '查看历史',
+            cancelText: '知道了',
+            success: (res) => {
+              if (res.confirm) {
+                this.goToHistory();
+              }
+            }
+          });
+        }
       });
     } catch (error) {
       console.error('生成PDF失败:', error);
       wx.hideLoading();
       wx.showToast({
-        title: '生成PDF失败，可能是历史文件太多了！',
-        icon: 'none'
+        title: getPdfErrorMessage(error, currentImageIndex),
+        icon: 'none',
+        duration: 3000
       });
     } finally {
       this.setData({ isGenerating: false });

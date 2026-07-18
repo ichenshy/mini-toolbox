@@ -326,6 +326,23 @@ Page({
           size: file.size,
           type: 'text/markdown'
         });
+      },
+      fail: (err) => {
+        console.error('选择聊天文件失败:', err);
+        if (err.errMsg && /cancel/.test(err.errMsg)) {
+          return;
+        }
+        let title = '无法打开聊天文件';
+        if (err.errno === 112 || err.errno === 101100) {
+          title = '后台需声明「收集你选中的文件」';
+        } else if (err.errno === 101102) {
+          title = '需先同意隐私协议';
+        }
+        wx.showToast({
+          title,
+          icon: 'none',
+          duration: 3000
+        });
       }
     });
   }

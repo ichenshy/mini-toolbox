@@ -9,7 +9,7 @@
       <view class="tool-mark pdf-mark">PDF</view>
       <view class="tool-body">
         <text class="tool-name">图片转 PDF</text>
-        <text class="tool-desc">多图排序、合并导出，支持历史记录</text>
+        <text class="tool-desc">从聊天选图，合并导出，支持历史记录</text>
       </view>
       <text class="tool-arrow">›</text>
     </view>

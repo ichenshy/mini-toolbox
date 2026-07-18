@@ -4,7 +4,7 @@
       <view class="back-btn" bindtap="goHome">‹</view>
       <view class="header-text">
         <text class="title">图片转 PDF</text>
-        <text class="subtitle">选择图片、调整顺序，一键合并导出</text>
+        <text class="subtitle">从聊天记录选择图片，调整顺序后导出 PDF</text>
       </view>
     </view>
   </view>
@@ -14,6 +14,11 @@
       <view class="card-head">
         <text class="card-title">图片列表</text>
         <text class="card-meta">{{images.length}}/32</text>
+      </view>
+
+      <view class="format-tip">
+        <text class="format-tip-main">{{formatHintMain}}</text>
+        <text class="format-tip-sub">{{formatHintSub}}</text>
       </view>
 
       <view class="image-list">
@@ -37,10 +42,10 @@
           </view>
         </block>
 
-        <view class="add-btn" bindtap="chooseImage" wx:if="{{images.length < 32}}">
+        <button class="add-btn" bindtap="chooseImage" hover-class="add-btn-hover" wx:if="{{images.length < 32}}">
           <text class="add-icon">+</text>
-          <text class="add-text">添加图片</text>
-        </view>
+          <text class="add-text">从聊天添加图片</text>
+        </button>
       </view>
     </view>
   </view>
@@ -70,9 +75,11 @@
 
     <view class="button-group">
       <button class="theme-btn theme-btn-secondary history-btn" bindtap="goToHistory">历史记录</button>
-      <button class="theme-btn theme-btn-primary generate-btn" bindtap="generatePDF" disabled="{{images.length === 0}}">
+      <button class="theme-btn theme-btn-primary generate-btn" bindtap="generatePDF" disabled="{{images.length === 0 || isGenerating}}" loading="{{isGenerating}}">
         生成 PDF
       </button>
     </view>
   </view>
 </view>
+
+<privacy-popup />

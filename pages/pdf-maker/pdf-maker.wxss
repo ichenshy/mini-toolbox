@@ -82,6 +82,26 @@
   color: var(--ink-soft);
 }
 
+.format-tip {
+  padding: 18rpx 28rpx 0;
+}
+
+.format-tip-main,
+.format-tip-sub {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.format-tip-main {
+  color: var(--ink);
+}
+
+.format-tip-sub {
+  margin-top: 6rpx;
+  color: var(--ink-soft);
+}
+
 .image-list {
   display: flex;
   flex-wrap: wrap;
@@ -157,6 +177,18 @@
   gap: 8rpx;
   border: 2rpx dashed rgba(154, 123, 79, 0.35);
   box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  font-weight: normal;
+}
+
+.add-btn::after {
+  border: none;
+}
+
+.add-btn-hover {
+  background: rgba(154, 123, 79, 0.12);
 }
 
 .add-icon {
@@ -166,8 +198,11 @@
 }
 
 .add-text {
-  font-size: 22rpx;
+  font-size: 20rpx;
+  line-height: 1.35;
+  text-align: center;
   color: var(--ink-soft);
+  padding: 0 12rpx;
 }
 
 .footer {
