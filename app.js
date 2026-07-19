@@ -3,9 +3,11 @@
 require('./utils/polyfills.umd.js');
 
 const { CHAT_MATERIAL_SCENE, storeForwardMaterials } = require('./utils/material.js');
+const { initPrivacyAuthorization } = require('./utils/privacy.js');
 
 App({
   onLaunch(options) {
+    initPrivacyAuthorization();
     storeForwardMaterials(options);
   },
 

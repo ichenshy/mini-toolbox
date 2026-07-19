@@ -2,6 +2,8 @@ const { getChatMaterial, getChatMaterialOptions } = require('../../utils/materia
 const { markdownToHtml } = require('../../utils/md-render.js');
 const { saveMarkdownHistory, isHistoryPath } = require('../../utils/md-history.js');
 const { readFileCompat } = require('../../utils/read-file.js');
+const { requirePrivacyAuthorize } = require('../../utils/privacy.js');
+const { bindPrivacyPage } = require('../../utils/privacy-page.js');
 
 function normalizeTitle(text) {
   return String(text || '')
@@ -44,8 +46,9 @@ const MD_TAG_STYLE = {
   img: 'max-width:100%;border-radius:8px;margin:8px 0;'
 };
 
-Page({
+const pageDef = {
   data: {
+    showPrivacy: false,
     displayTitle: '',
     htmlContent: '',
     rawContent: '',
@@ -57,6 +60,7 @@ Page({
   },
 
   onLoad(options) {
+    this.onLoadPrivacy();
     this.loadPageLayoutInfo();
 
     if (options?.filePath) {
@@ -73,6 +77,7 @@ Page({
   },
 
   onUnload() {
+    this.onUnloadPrivacy();
     this.clearRetryTimers();
   },
 
@@ -81,6 +86,7 @@ Page({
       return;
     }
     this.tryLoadMaterial();
+    this.ensurePrivacyAuthorized();
   },
 
   loadPageLayoutInfo() {
@@ -306,6 +312,19 @@ Page({
   },
 
   chooseMarkdownFile() {
+    requirePrivacyAuthorize()
+      .then(() => this.openMarkdownFilePicker())
+      .catch((err) => {
+        console.error('隐私授权未通过:', err);
+        wx.showToast({
+          title: '需先同意隐私协议',
+          icon: 'none',
+          duration: 3000
+        });
+      });
+  },
+
+  openMarkdownFilePicker() {
     wx.chooseMessageFile({
       count: 1,
       type: 'file',
@@ -346,4 +365,7 @@ Page({
       }
     });
   }
-});
+};
+
+bindPrivacyPage(pageDef);
+Page(pageDef);

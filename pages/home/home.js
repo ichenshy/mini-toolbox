@@ -1,10 +1,16 @@
+const { getMiniProgramVersionLabel } = require('../../utils/version.js');
+
 Page({
   data: {
-    pageStyleGlobal: ''
+    pageStyleGlobal: '',
+    version: ''
   },
 
   onLoad() {
     this.loadPageLayoutInfo();
+    this.setData({
+      version: getMiniProgramVersionLabel()
+    });
   },
 
   loadPageLayoutInfo() {

@@ -1,3 +1,5 @@
+const { onPrivacyNeed, resolvePrivacyAuthorization } = require('../../utils/privacy.js');
+
 Component({
   data: {
     show: false
@@ -5,25 +7,30 @@ Component({
 
   lifetimes: {
     attached() {
-      this._handler = (resolve) => {
-        this._resolve = resolve;
-        this.setData({ show: true });
-      };
-
-      if (wx.onNeedPrivacyAuthorization) {
-        wx.onNeedPrivacyAuthorization(this._handler);
-      }
+      this._offPrivacyNeed = onPrivacyNeed(({ resolve, proactive }) => {
+        this.showPrivacy(resolve, proactive);
+      });
     },
 
     detached() {
-      if (this._handler && wx.offNeedPrivacyAuthorization) {
-        wx.offNeedPrivacyAuthorization(this._handler);
+      if (this._offPrivacyNeed) {
+        this._offPrivacyNeed();
+        this._offPrivacyNeed = null;
       }
       this._resolve = null;
     }
   },
 
   methods: {
+    showPrivacy(resolve, proactive) {
+      this._resolve = resolve || null;
+      this.setData({ show: true });
+
+      if (proactive) {
+        console.info('[privacy-popup] 主动展示隐私弹窗');
+      }
+    },
+
     noop() {},
 
     openPrivacyContract() {
@@ -33,24 +40,20 @@ Component({
     },
 
     handleAgree() {
-      if (this._resolve) {
-        this._resolve({
-          event: 'agree',
-          buttonId: 'privacy-agree-btn'
-        });
-      }
+      resolvePrivacyAuthorization({
+        event: 'agree',
+        buttonId: 'privacy-agree-btn'
+      });
       this._resolve = null;
       this.setData({ show: false });
     },
 
     handleDisagree() {
-      if (this._resolve) {
-        this._resolve({ event: 'disagree' });
-      }
+      resolvePrivacyAuthorization({ event: 'disagree' });
       this._resolve = null;
       this.setData({ show: false });
       wx.showToast({
-        title: '需同意隐私协议才能选图',
+        title: '需同意隐私协议才能选文件',
         icon: 'none',
         duration: 3000
       });

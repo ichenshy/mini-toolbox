@@ -23,4 +23,6 @@
       <text class="tool-arrow">›</text>
     </view>
   </view>
+
+  <text class="version-text">{{version}}</text>
 </view>

@@ -95,3 +95,11 @@
   color: var(--ink-faint);
   padding-bottom: 4rpx;
 }
+
+.version-text {
+  display: block;
+  margin-top: 48rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-faint);
+}

@@ -1,4 +1,3 @@
-const jsPDF = require('../../utils/my_jspdf.js');
 const {
   prepareImageForPdf,
   buildPdfFileName,
@@ -6,11 +5,14 @@ const {
   inspectChatImage,
   getSupportedFormatHint
 } = require('../../utils/image-pdf.js');
+const { requirePrivacyAuthorize } = require('../../utils/privacy.js');
+const { bindPrivacyPage } = require('../../utils/privacy-page.js');
 
 const formatHint = getSupportedFormatHint();
 
-Page({
+const pageDef = {
   data: {
+    showPrivacy: false,
     images: [],
     isGenerating: false,
     itemWidth: 220,
@@ -26,7 +28,16 @@ Page({
   },
 
   onLoad() {
+    this.onLoadPrivacy();
     this.loadPageLayoutInfo();
+  },
+
+  onUnload() {
+    this.onUnloadPrivacy();
+  },
+
+  onShow() {
+    this.ensurePrivacyAuthorized();
   },
   loadPageLayoutInfo() {
     const rect = wx.getMenuButtonBoundingClientRect()
@@ -37,6 +48,19 @@ Page({
 
   // 从聊天记录选择图片
   chooseImage() {
+    requirePrivacyAuthorize()
+      .then(() => this.openMessageFilePicker())
+      .catch((err) => {
+        console.error('隐私授权未通过:', err);
+        wx.showToast({
+          title: '需先同意隐私协议',
+          icon: 'none',
+          duration: 3000
+        });
+      });
+  },
+
+  openMessageFilePicker() {
     wx.chooseMessageFile({
       count: 32 - this.data.images.length,
       type: 'image',
@@ -313,6 +337,7 @@ Page({
     let currentImageIndex = 0;
 
     try {
+      const jsPDF = require('../../utils/my_jspdf.js');
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -445,4 +470,7 @@ Page({
       this.setData({ isGenerating: false });
     }
   }
-}); 
+};
+
+bindPrivacyPage(pageDef);
+Page(pageDef);
