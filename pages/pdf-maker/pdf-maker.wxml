@@ -42,10 +42,10 @@
           </view>
         </block>
 
-        <button class="add-btn" bindtap="chooseImage" hover-class="add-btn-hover" wx:if="{{images.length < 32}}">
+        <view class="add-btn" bindtap="chooseImage" hover-class="add-btn-hover" wx:if="{{images.length < 32}}">
           <text class="add-icon">+</text>
           <text class="add-text">从聊天添加图片</text>
-        </button>
+        </view>
       </view>
     </view>
   </view>
@@ -78,27 +78,6 @@
       <button class="theme-btn theme-btn-primary generate-btn" bindtap="generatePDF" disabled="{{images.length === 0 || isGenerating}}" loading="{{isGenerating}}">
         生成 PDF
       </button>
-    </view>
-  </view>
-
-  <view class="privacy-mask" wx:if="{{showPrivacy}}" catchtouchmove="privacyNoop">
-    <view class="privacy-dialog">
-      <text class="privacy-title">用户隐私保护提示</text>
-      <view class="privacy-content">
-        <text>为从聊天记录选择文件，需您阅读并同意</text>
-        <text class="privacy-link" bindtap="openPrivacyContract">《用户隐私保护指引》</text>
-      </view>
-      <view class="privacy-actions">
-        <button class="privacy-btn privacy-btn-cancel" bindtap="handlePrivacyDisagree">拒绝</button>
-        <button
-          id="privacy-agree-btn"
-          class="privacy-btn privacy-btn-ok"
-          open-type="agreePrivacyAuthorization"
-          bindagreeprivacyauthorization="handlePrivacyAgree"
-        >
-          同意
-        </button>
-      </view>
     </view>
   </view>
 </view>

@@ -5,14 +5,11 @@ const {
   inspectChatImage,
   getSupportedFormatHint
 } = require('../../utils/image-pdf.js');
-const { requirePrivacyAuthorize } = require('../../utils/privacy.js');
-const { bindPrivacyPage } = require('../../utils/privacy-page.js');
 
 const formatHint = getSupportedFormatHint();
 
-const pageDef = {
+Page({
   data: {
-    showPrivacy: false,
     images: [],
     isGenerating: false,
     itemWidth: 220,
@@ -28,39 +25,16 @@ const pageDef = {
   },
 
   onLoad() {
-    this.onLoadPrivacy();
     this.loadPageLayoutInfo();
   },
 
-  onUnload() {
-    this.onUnloadPrivacy();
-  },
-
-  onShow() {
-    this.ensurePrivacyAuthorized();
-  },
   loadPageLayoutInfo() {
-    const rect = wx.getMenuButtonBoundingClientRect()
     const windowInfo = wx.getWindowInfo();
-    const pageStyleGlobal = `--status-bar-height: ${windowInfo.statusBarHeight}px;`
-    this.setData({ pageStyleGlobal })
+    const pageStyleGlobal = `--status-bar-height: ${windowInfo.statusBarHeight}px;`;
+    this.setData({ pageStyleGlobal });
   },
 
-  // 从聊天记录选择图片
   chooseImage() {
-    requirePrivacyAuthorize()
-      .then(() => this.openMessageFilePicker())
-      .catch((err) => {
-        console.error('隐私授权未通过:', err);
-        wx.showToast({
-          title: '需先同意隐私协议',
-          icon: 'none',
-          duration: 3000
-        });
-      });
-  },
-
-  openMessageFilePicker() {
     wx.chooseMessageFile({
       count: 32 - this.data.images.length,
       type: 'image',
@@ -154,88 +128,63 @@ const pageDef = {
     });
   },
 
-  // 预览图片
   previewImage(e) {
     const url = e.currentTarget.dataset.url;
     wx.previewImage({
       current: url,
-      urls: this.data.images.map(img => img.path)
+      urls: this.data.images.map((img) => img.path)
     });
   },
 
-  // 删除图片
   deleteImage(e) {
     const index = e.currentTarget.dataset.index;
     const images = [...this.data.images];
     images.splice(index, 1);
-    
-    this.setData({ images: images });
+    this.setData({ images });
   },
 
-  // 处理触摸开始
   onTouchStart(e) {
     const { index } = e.currentTarget.dataset;
-    
     this.setData({
       draggingIndex: index
     });
   },
 
-  // 处理触摸移动
   async onTouchMove(e) {
     if (this.data.draggingIndex === -1) return;
-    
-    // 从changedTouches中获取触摸坐标
-    const touch = e.changedTouches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
 
-    const newIndex = await this.calculateTargetIndex(x, y);
+    const touch = e.changedTouches[0];
+    const newIndex = await this.calculateTargetIndex(touch.clientX, touch.clientY);
     this.setData({ draggingTarget: newIndex });
   },
 
-  // 处理触摸结束
   onTouchEnd(e) {
-
     if (this.data.draggingIndex === -1) return;
+
     setTimeout(() => {
       this.setData({ draggingTarget: -1, draggingIndex: -1 });
-    }, 200)
+    }, 200);
 
-    
     const { index } = e.currentTarget.dataset;
-    
-    // 获取松手时的位置
     const touch = e.changedTouches[0];
-    const endX = touch.clientX;
-    const endY = touch.clientY;
-    this.updateToTarget(index, endX, endY);
+    this.updateToTarget(index, touch.clientX, touch.clientY);
   },
 
   calculateTargetIndex(x, y) {
     const query = wx.createSelectorQuery();
     query.selectAll('.image-item').boundingClientRect();
-    
-    return new Promise((resolve, reject) => {
+
+    return new Promise((resolve) => {
       query.exec((res) => {
         if (!res || !res[0] || !res[0].length) {
-          console.error('获取图片项位置失败');
           resolve(-1);
           return;
         }
-        
+
         const imageRects = res[0];
-        
-        // 遍历所有图片项，判断是否拖拽到某一个上面了
         for (let i = 0; i < imageRects.length; i++) {
           const rect = imageRects[i];
-          // 判断坐标是否在图片项范围内
-          if (
-            x >= rect.left && 
-            x <= rect.right && 
-            y >= rect.top && 
-            y <= rect.bottom
-          ) {
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
             resolve(i);
             return;
           }
@@ -244,32 +193,26 @@ const pageDef = {
       });
     });
   },
-  
-  updateToTarget(index, endX, endY) {
 
+  updateToTarget(index, endX, endY) {
     this.calculateTargetIndex(endX, endY).then((targetIndex) => {
-      if (targetIndex === -1) return;
-      if (targetIndex === index) return;
+      if (targetIndex === -1 || targetIndex === index) return;
       this.reorderImages(index, targetIndex);
     });
-
   },
 
-  // 重新排序图片
   reorderImages(fromIndex, toIndex) {
-
-    // 确保索引有效
-    if (fromIndex < 0 || fromIndex >= this.data.images.length || 
-        toIndex < 0 || toIndex >= this.data.images.length) {
-        console.error('无效的索引:', { fromIndex, toIndex, totalImages: this.data.images.length });
+    if (
+      fromIndex < 0 || fromIndex >= this.data.images.length
+      || toIndex < 0 || toIndex >= this.data.images.length
+    ) {
       return;
     }
-    
+
     const images = [...this.data.images];
     const [movedItem] = images.splice(fromIndex, 1);
     images.splice(toIndex, 0, movedItem);
-    
-    this.setData({ images: images, draggingTarget: -1 });
+    this.setData({ images, draggingTarget: -1 });
   },
 
   onCombineImagesChange(e) {
@@ -279,11 +222,10 @@ const pageDef = {
   },
 
   onMarginChange(e) {
-    const margin = e.detail.value === '0' ? 0 : (parseInt(e.detail.value) || 10);
+    const margin = e.detail.value === '0' ? 0 : (parseInt(e.detail.value, 10) || 10);
     this.setData({ margin });
   },
 
-  // 旋转图片
   rotateImage(e) {
     const index = e.currentTarget.dataset.index;
     const images = [...this.data.images];
@@ -291,14 +233,12 @@ const pageDef = {
     this.setData({ images });
   },
 
-  // 处理文件名变化
   onFilenameChange(e) {
     this.setData({
       customFilename: e.detail.value
     });
   },
 
-  // 跳转到历史页面
   goToHistory() {
     wx.navigateTo({
       url: '/pages/pdf-history/pdf-history'
@@ -315,7 +255,6 @@ const pageDef = {
     });
   },
 
-  // 生成PDF
   async generatePDF() {
     if (this.data.images.length === 0) {
       wx.showToast({
@@ -331,7 +270,7 @@ const pageDef = {
 
     this.setData({ isGenerating: true });
     wx.showLoading({
-      title: '正在生成PDF...',
+      title: '正在生成PDF...'
     });
 
     let currentImageIndex = 0;
@@ -443,8 +382,7 @@ const pageDef = {
             icon: 'success'
           });
         },
-        fail: (err) => {
-          console.error('打开PDF文件失败:', err);
+        fail: () => {
           wx.showModal({
             title: 'PDF 已生成',
             content: '文件已保存，可在历史记录中打开',
@@ -470,7 +408,4 @@ const pageDef = {
       this.setData({ isGenerating: false });
     }
   }
-};
-
-bindPrivacyPage(pageDef);
-Page(pageDef);
+});

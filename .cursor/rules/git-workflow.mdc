@@ -1,0 +1,10 @@
+---
+description: Git 工作流：直接在 master 提交并推送
+alwaysApply: true
+---
+
+# Git 工作流
+
+- 完成功能修复或改动后，直接在 `master` 分支上提交，不要创建 feature 分支（除非用户明确要求）。
+- 提交完成后推送到 `origin master`。
+- 仅在用户明确要求时才使用其他分支或 PR 流程。
